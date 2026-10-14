@@ -1,54 +1,32 @@
-version: "3.9"
+# Runs the edge server: Mosquitto, MediaMTX, the dock handshake, the telemetry
+# and flight-command bridges, and the ESDK video relay, in one container
+# managed by supervisord (see infrastructure/supervisord.conf).
+#
+# Usage (from this directory):
+#   cp .env.example .env      # then fill it in
+#   docker compose up -d --build
+#
+# Clients connect to:
+#   RTSP video:      rtsp://<EDGE-IP>:8554/live
+#   MQTT telemetry:  <EDGE-IP>:1883, topic drone/telemetry/position
+#   Flight commands: <EDGE-IP>:1883, topic dock/dock1/flight
 
-# docker-compose.yml
-#
-# Runs the DJI edge server with RTSP video relay and MQTT telemetry relay.
-#
-# Usage:
-#   docker-compose up --build
-#
-# After startup client can connect to:
-#   RTSP video:   rtsp://<EDGE-IP>:8554/live
-#   MQTT telemetry:  broker <EDGE-IP>:1883, topic drone/telemetry/position
+name: edge-server
+
 services:
-  flight-command-bridge:
-    build: ./flight-command-bridge
-    network_mode: host
-    environment:
-      MQTT_HOST: localhost
-    restart: unless-stopped
-
   edge-server:
-    build: .
-    restart: unless-stopped
-    network_mode: "host"
-    privileged: true
+    build:
+      context: ..
+      dockerfile: Dockerfile
 
-    environment:
-      # ------------------------------------------------------------------
-      # FlightHub MQTT broker credentials
-      # These are the broker details from your FlightHub account /
-      # your Cloud API deployment. Fill these in before running.
-      # ------------------------------------------------------------------
-      FLIGHTHUB_BROKER_HOST: ""        # e.g. mqtt.flighthub.dji.com
-      FLIGHTHUB_BROKER_PORT: "1883"
-      FLIGHTHUB_MQTT_USERNAME: ""      # your FlightHub MQTT username
-      FLIGHTHUB_MQTT_PASSWORD: ""      # your FlightHub MQTT password
-
-      # ------------------------------------------------------------------
-      # Drone serial number — determines which OSD topic to subscribe to.
-      # Find this in FlightHub under your device list.
-      # e.g. "1ZNBK7LC00AB"
-      # ------------------------------------------------------------------
-      DRONE_SN: ""
-
-      # ------------------------------------------------------------------
-      # Local Mosquitto config (defaults are fine unless you change ports)
-      # ------------------------------------------------------------------
-      LOCAL_BROKER_HOST: "127.0.0.1"
-      LOCAL_BROKER_PORT: "1883"
-      LOCAL_PUBLISH_TOPIC: "drone/telemetry/position"
       
-    # Keep container stdin open (some ESDK versions need this)
-    stdin_open: false
-    tty: false
+    platform: linux/arm64      # libedgesdk.a is aarch64-only
+    network_mode: host
+    privileged: true           # ESDK device access
+    env_file: .env
+    volumes:
+      - mosquitto-data:/var/lib/mosquitto
+    restart: unless-stopped
+
+volumes:
+  mosquitto-data:
