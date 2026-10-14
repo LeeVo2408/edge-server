@@ -1,4 +1,4 @@
-#include "liveview_rtsp_sample.h"
+#include "edge_app/liveview_rtsp_sample.h"
 
 #include <thread>
 #include <unistd.h>

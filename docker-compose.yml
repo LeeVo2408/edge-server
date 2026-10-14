@@ -1,0 +1,30 @@
+# Runs the edge server: Mosquitto, MediaMTX, the dock handshake, the telemetry
+# and flight-command bridges, and the ESDK video relay, in one container
+# managed by supervisord (see infrastructure/supervisord.conf).
+#
+# Usage (from the repository root):
+#   cp infrastructure/.env.example infrastructure/.env   # then fill it in
+#   docker compose up -d --build
+#
+# Clients connect to:
+#   RTSP video:      rtsp://<EDGE-IP>:8554/live
+#   MQTT telemetry:  <EDGE-IP>:1883, topic drone/telemetry/position
+#   Flight commands: <EDGE-IP>:1883, topic dock/dock1/flight
+
+name: edge-server
+
+services:
+  edge-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    platform: linux/arm64      # libedgesdk.a is aarch64-only
+    network_mode: host
+    privileged: true           # ESDK device access
+    env_file: infrastructure/.env
+    volumes:
+      - mosquitto-data:/var/lib/mosquitto
+    restart: unless-stopped
+
+volumes:
+  mosquitto-data:
