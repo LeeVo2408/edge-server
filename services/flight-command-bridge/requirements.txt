@@ -1,14 +1,2 @@
-# Flight-command bridge, stage 1: receive and validate flight commands.
-# Self-contained: build context is this folder.
-FROM python:3.13-slim
-
-WORKDIR /app
-
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY schemas/ schemas/
-COPY bridge.py bridge.py
-
-USER nobody
-CMD ["python", "-u", "bridge.py"]
+paho-mqtt==2.1.0
+jsonschema==4.26.0
