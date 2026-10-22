@@ -6,8 +6,6 @@
 
 #include "edge_app/liveview_relay.h"
 
-using namespace edge_app;
-
 namespace {
 
 // Camera type selection:
@@ -30,9 +28,9 @@ constexpr std::chrono::seconds kIdleInterval{1};
 }  // namespace
 
 int main() {
-    std::cout << "Starting Edge RTSP Server\n";
+    std::cout << "Starting Edge RTSP Server" << std::endl;
 
-    auto liveview = std::make_shared<LiveviewRelay>();
+    auto liveview = std::make_shared<edge_app::LiveviewRelay>();
 
     edge_sdk::ErrorCode error_code = liveview->Init(kCameraType, kStreamQuality);
     if (error_code != edge_sdk::kOk) {
@@ -47,7 +45,8 @@ int main() {
     }
 
     std::cout << "Running. RTSP stream will be available at "
-                 "rtsp://<EDGE-IP>:8554/live once the drone connects.\n";
+                 "rtsp://<EDGE-IP>:8554/live once the drone connects."
+              << std::endl;
 
     while (true) {
         std::this_thread::sleep_for(kIdleInterval);

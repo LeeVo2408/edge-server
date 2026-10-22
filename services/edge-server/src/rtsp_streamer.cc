@@ -22,17 +22,16 @@ constexpr char kRtspPublishUrl[] = "rtsp://127.0.0.1:8554/live";
 //                   playing back files, not for live push. Including
 //                   it on a live source causes FFmpeg to throttle
 //                   and drop incoming frames.
-const std::string kFfmpegCommand =
-    std::string(
-        "ffmpeg "
-        "-nostdin "
-        "-loglevel warning "
-        "-f h264 "
-        "-i pipe:0 "
-        "-c copy "
-        "-f rtsp "
-        "-rtsp_transport tcp ") +
-    kRtspPublishUrl;
+const std::string kFfmpegCommand = std::string(
+                                       "ffmpeg "
+                                       "-nostdin "
+                                       "-loglevel warning "
+                                       "-f h264 "
+                                       "-i pipe:0 "
+                                       "-c copy "
+                                       "-f rtsp "
+                                       "-rtsp_transport tcp ") +
+                                   kRtspPublishUrl;
 
 }  // namespace
 
@@ -49,7 +48,7 @@ bool RtspStreamer::Start() {
         return false;
     }
 
-    std::cout << "RtspStreamer: stream publishing to rtsp://<EDGE-IP>:8554/live\n";
+    std::cout << "RtspStreamer: stream publishing to rtsp://<EDGE-IP>:8554/live" << std::endl;
     return true;
 }
 
