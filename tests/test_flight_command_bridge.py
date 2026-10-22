@@ -21,7 +21,7 @@ def bridge(monkeypatch):
     # Change this path if your source file is somewhere else.
     path = (
         Path(__file__).resolve().parents[1]
-        / "services/flight-command-bridge/bridge.py"
+        / "services/flight-command-bridge/flight_command_bridge.py"
     )
 
     spec = importlib.util.spec_from_file_location("flight_under_test", path)

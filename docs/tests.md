@@ -24,13 +24,13 @@ They require those services to be running.
 ## 2. Files created and changed
 
 ```text
-Tests/
-  run-all-tests.py
-  test-container-health.py
-  test-broker.py
-  test-telemetry-bridge.py
-  test-flight-command-bridge.py
-  test-dock-handshake.py
+tests/
+  run_all_tests.py
+  test_container_health.py
+  test_broker.py
+  test_telemetry_bridge.py
+  test_flight_command_bridge.py
+  test_dock_handshake.py
 ```
 
 Production source changed:
@@ -105,7 +105,7 @@ test requires a reachable broker. Unit tests do not require either.
 
 ## 5. Container health and crash recovery
 
-File: `Tests/test-container-health.py`
+File: `tests/test_container_health.py`
 
 Type: integration tests.
 
@@ -165,7 +165,7 @@ continuous connectivity or client reconnection during the crash.
 
 ## 6. MQTT broker connectivity
 
-File: `Tests/test-broker.py`
+File: `tests/test_broker.py`
 
 Type: integration test.
 
@@ -199,7 +199,7 @@ internet/Starlink access.
 
 ## 7. Telemetry bridge unit tests
 
-File: `Tests/test-telemetry-bridge.py`
+File: `tests/test_telemetry_bridge.py`
 
 Source: `services/telemetry-bridge/telemetry_bridge.py`
 
@@ -284,9 +284,9 @@ copy must be rebuilt/redeployed before the running service uses this fix.
 
 ## 8. Flight-command bridge unit tests
 
-File: `Tests/test-flight-command-bridge.py`
+File: `tests/test_flight_command_bridge.py`
 
-Source: `services/flight-command-bridge/bridge.py`
+Source: `services/flight-command-bridge/flight_command_bridge.py`
 
 This is a **stage-1 receive-and-log bridge**. It does not validate commands or forward
 commands to DJI. Tests check that documented behaviour rather than inventing a
@@ -314,7 +314,7 @@ not prove automatic reconnection over a real network.
 
 ## 9. Dock-handshake unit tests
 
-File: `Tests/test-dock-handshake.py`
+File: `tests/test_dock_handshake.py`
 
 The fixture searches `services/` for exactly one `dock_handshake.py`, loads it with
 fake organization settings and blank DJI credential values, and does not call `main()`.
@@ -348,24 +348,24 @@ They do not comprehensively test every malformed decoded JSON structure or topic
 
 ## 10. Running all tests
 
-File: `Tests/run-all-tests.py`
+File: `tests/run_all_tests.py`
 
 From the project root:
 
 ```bash
-python3 Tests/run-all-tests.py
+python3 tests/run_all_tests.py
 ```
 
 Include deliberate process crash recovery on a test deployment:
 
 ```bash
-python3 Tests/run-all-tests.py --crash
+python3 tests/run_all_tests.py --crash
 ```
 
 Enable the three full-stack process checks only when their dependencies are configured:
 
 ```bash
-python3 Tests/run-all-tests.py --full-stack
+python3 tests/run_all_tests.py --full-stack
 ```
 
 Both flags can be combined. The runner does not start Docker, install dependencies,
@@ -373,7 +373,7 @@ or populate configuration files.
 
 The runner:
 
-1. Finds each test file beside itself in `Tests/`.
+1. Finds each test file beside itself in `tests/`.
 2. Selects the appropriate Paho environment.
 3. Runs each suite and generates a temporary JUnit XML report.
 4. Reads the report and prints individual test results.
@@ -400,11 +400,11 @@ Run the failing suite directly to see those details.
 Run from the project root:
 
 ```bash
-/tmp/fpv-test-venv/bin/python -m pytest Tests/test-container-health.py -v --tb=short
-/tmp/fpv-test-venv/bin/python -m pytest Tests/test-telemetry-bridge.py -v --tb=short
-/tmp/fpv-flight-test-venv/bin/python -m pytest Tests/test-flight-command-bridge.py -v --tb=short
-/tmp/fpv-test-venv/bin/python -m pytest Tests/test-dock-handshake.py -v --tb=short
-/tmp/fpv-flight-test-venv/bin/python -m pytest Tests/test-broker.py -v --tb=short
+/tmp/fpv-test-venv/bin/python -m pytest tests/test_container_health.py -v --tb=short
+/tmp/fpv-test-venv/bin/python -m pytest tests/test_telemetry_bridge.py -v --tb=short
+/tmp/fpv-flight-test-venv/bin/python -m pytest tests/test_flight_command_bridge.py -v --tb=short
+/tmp/fpv-test-venv/bin/python -m pytest tests/test_dock_handshake.py -v --tb=short
+/tmp/fpv-flight-test-venv/bin/python -m pytest tests/test_broker.py -v --tb=short
 ```
 
 The filenames contain hyphens. The commands explicitly select them; default pytest
@@ -418,13 +418,13 @@ Python environment. The `/tmp` environments on the Mac are not shared with other
 From the VM hosting the reachable broker:
 
 ```bash
-TEST_BROKER_HOST=127.0.0.1 python -m pytest Tests/test-broker.py -v --tb=short
+TEST_BROKER_HOST=127.0.0.1 python -m pytest tests/test_broker.py -v --tb=short
 ```
 
 From a different machine on the network:
 
 ```bash
-TEST_BROKER_HOST="BROKER_VM_IP" python -m pytest Tests/test-broker.py -v --tb=short
+TEST_BROKER_HOST="BROKER_VM_IP" python -m pytest tests/test_broker.py -v --tb=short
 ```
 
 Replace `BROKER_VM_IP` with the VM's reachable address. If the broker is hosted

@@ -13,18 +13,18 @@ PAHO1 = "/tmp/fpv-test-venv/bin/python"
 PAHO2 = "/tmp/fpv-flight-test-venv/bin/python"
 
 SUITES = [
-    ("Container", "test-container-health", PAHO1),
-    ("Broker", "test-broker", PAHO2),
-    ("Telemetry", "test-telemetry-bridge", PAHO1),
-    ("Flight commands", "test-flight-command-bridge", PAHO2),
-    ("Dock handshake", "test-dock-handshake", PAHO1),
+    ("Container", "test_container_health", PAHO1),
+    ("Broker", "test_broker", PAHO2),
+    ("Telemetry", "test_telemetry_bridge", PAHO1),
+    ("Flight commands", "test_flight_command_bridge", PAHO2),
+    ("Dock handshake", "test_dock_handshake", PAHO1),
 ]
 
 
 def find_test(name):
-    """Find a test beside this runner in the Tests folder."""
+    """Find a test beside this runner in the tests folder."""
     folder = Path(__file__).resolve().parent
-    filename = name.replace("_", "-") + ".py"
+    filename = name + ".py"
     path = folder / filename
     return path if path.is_file() else None
 
