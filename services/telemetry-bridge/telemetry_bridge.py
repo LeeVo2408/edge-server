@@ -42,12 +42,41 @@ def on_message(client, userdata, msg):
         log.warning(f"Failed to decode OSD message: {e}")
         return
 
+
+    #Change the previous codes for input validation
+    """    
     data = envelope.get("data", {})
     lat  = data.get("latitude")
     lon  = data.get("longitude")
+    """
+
+    # The message must be a JSON object.
+    if not isinstance(envelope, dict):
+        log.warning("Skipping OSD: message must be an object")
+        return
+
+    # The data field must also be an object.
+    data = envelope.get("data", {})
+    if not isinstance(data, dict):
+        log.warning("Skipping OSD: data must be an object")
+        return
+
+    lat = data.get("latitude")
+    lon = data.get("longitude")
 
     if lat is None or lon is None:
         return
+
+    # Accept numbers only. Booleans are not valid coordinates.
+    if type(lat) not in (int, float) or type(lon) not in (int, float):
+        log.warning("Skipping OSD: coordinates must be numbers")
+        return
+
+    # Reject impossible coordinates, including NaN and infinity.
+    if not (-90 <= lat <= 90 and -180 <= lon <= 180):
+        log.warning("Skipping OSD: coordinates outside valid ranges")
+        return
+
 
     if lat == 0.0 and lon == 0.0:
         log.debug("Skipping OSD: no GPS fix yet (lat=0, lon=0)")

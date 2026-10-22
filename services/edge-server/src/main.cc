@@ -2,14 +2,14 @@
 #include <thread>
 #include <chrono>
 
-#include "edge_app/liveview_rtsp_sample.h"
+#include "edge_app/liveview_relay.h"
 
 using namespace edge_app;
 
 int main() {
     std::cout << "Starting Edge RTSP Server\n";
 
-    auto liveview = std::make_shared<LiveviewRTSPSample>();
+    auto liveview = std::make_shared<LiveviewRelay>();
 
     // Camera type selection:
     //   kCameraTypeFpv     -- FPV (forward-facing) camera.
