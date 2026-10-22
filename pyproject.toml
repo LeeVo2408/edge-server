@@ -1,0 +1,21 @@
+# Python tooling for the services in services/. See docs/code-quality.md.
+# Each service pins its own runtime dependencies in its requirements.txt.
+
+[tool.ruff]
+target-version = "py310"  # python3 on Ubuntu 22.04, which the image uses
+line-length = 100
+src = ["services"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",  # pycodestyle
+    "F",       # pyflakes
+    "I",       # import order
+    "N",       # pep8 naming
+    "UP",      # modern syntax
+    "B",       # likely bugs
+    "S",       # security smells
+    "BLE",     # bare `except Exception`
+    "G",       # lazy logging arguments, no f-strings in log calls
+    "RUF",
+]

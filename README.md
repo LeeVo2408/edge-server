@@ -46,6 +46,8 @@ that part alone.
 edge-server/
 ├── Dockerfile                  # builds the single image (C++ build stage + runtime stage)
 ├── docker-compose.yml          # runs it; start everything from the repo root
+├── .clang-format               # C++ formatting rules
+├── pyproject.toml              # Python lint and format rules (Ruff)
 ├── infrastructure/             # configuration for software we don't write
 │   ├── .env.example            # every setting the container reads (copy to .env)
 │   ├── supervisord.conf        # which programs run, in what order, restart policy
@@ -54,7 +56,7 @@ edge-server/
 ├── services/                   # our code, one folder per program
 │   ├── dock-handshake/         # dock_handshake.py + requirements.txt
 │   ├── edge-server/            # C++ video relay: CMakeLists.txt, src/, include/edge_app/
-│   ├── flight-command-bridge/  # bridge.py + requirements.txt
+│   ├── flight-command-bridge/  # flight_command_bridge.py + requirements.txt
 │   └── telemetry-bridge/       # telemetry_bridge.py + requirements.txt
 ├── third-party/
 │   └── dji-edge-sdk/           # vendored DJI Edge SDK: headers, libedgesdk.a, init code
@@ -181,8 +183,19 @@ OSD telemetry to the broker and the telemetry bridge starts translating it.
   anything to the aircraft or validate payloads.
 - **Two Python environments** exist inside the image because
   `flight-command-bridge` uses paho-mqtt 2.x and the other two scripts use 1.x.
-- **aarch64 only.** `third-party/dji-edge-sdk/lib/x86_64/` exists but the build
-  targets aarch64.
+- **The image is aarch64 only.** `docker-compose.yml` builds for `linux/arm64`.
+  The C++ server itself also builds natively on x86_64 against
+  `third-party/dji-edge-sdk/lib/x86_64/`, which is useful for checking a change
+  on an Intel machine.
+
+## Code quality
+
+Standards are in [docs/code-quality.md](docs/code-quality.md). Before pushing:
+
+```sh
+clang-format --dry-run --Werror services/edge-server/src/*.cc services/edge-server/include/edge_app/*.h
+ruff check services && ruff format --check services
+```
 
 ## Documentation
 
