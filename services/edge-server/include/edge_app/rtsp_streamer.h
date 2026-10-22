@@ -1,25 +1,29 @@
-#ifndef __RTSP_STREAMER_H__
-#define __RTSP_STREAMER_H__
+#pragma once
 
-#include <cstdio>
+#include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <mutex>
 
-class RTSPStreamer {
+namespace edge_app {
+
+class RtspStreamer {
 public:
-    RTSPStreamer();
-    ~RTSPStreamer();
+    RtspStreamer() = default;
+    ~RtspStreamer();
+
+    // Copying would leave two objects closing the same FFmpeg pipe.
+    RtspStreamer(const RtspStreamer&) = delete;
+    RtspStreamer& operator=(const RtspStreamer&) = delete;
 
     bool Start();
     void Stop();
 
-    void PushFrame(
-        const uint8_t* data,
-        size_t len);
+    void PushFrame(const uint8_t* data, size_t length);
 
 private:
-    FILE*      ffmpeg_pipe_;
-    std::mutex pipe_mutex_;
+    FILE* ffmpeg_pipe_ = nullptr;
+    std::mutex ffmpeg_pipe_mutex_;
 };
 
-#endif
+}  // namespace edge_app

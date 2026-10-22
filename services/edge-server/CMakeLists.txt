@@ -8,7 +8,7 @@ set(SDK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../third-party/dji-edge-sdk)
 
 set(SOURCES
     src/main.cc
-    src/liveview_rtsp_sample.cc
+    src/liveview_relay.cc
     src/rtsp_streamer.cc
 )
 
