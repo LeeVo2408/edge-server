@@ -62,10 +62,10 @@ RUN python3 -m venv /opt/venv-paho1 \
  && rm /tmp/req-*.txt
 
 # Programs
-COPY --from=build /src/build/server                 /app/server
+COPY --from=build /src/build/edge-server            /app/edge-server
 COPY services/dock-handshake/dock_handshake.py      /app/dock_handshake.py
 COPY services/telemetry-bridge/telemetry_bridge.py  /app/telemetry_bridge.py
-COPY services/flight-command-bridge/bridge.py       /app/flight_command_bridge.py
+COPY services/flight-command-bridge/flight_command_bridge.py /app/flight_command_bridge.py
 
 # Configuration
 COPY infrastructure/mosquitto/mosquitto.conf /etc/mosquitto/mosquitto.conf

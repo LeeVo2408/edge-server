@@ -1,44 +1,36 @@
-#ifndef __LIVEVIEW_RTSP_SAMPLE_H__
-#define __LIVEVIEW_RTSP_SAMPLE_H__
+#pragma once
 
 #include <atomic>
-#include <chrono>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
 
-#include "liveview/liveview.h"
+#include "edge_app/rtsp_streamer.h"
 #include "error_code.h"
-
-#include "rtsp_streamer.h"
+#include "liveview/liveview.h"
 
 namespace edge_app {
 
-class LiveviewRTSPSample {
+// Relays the aircraft's liveview H.264 stream from the DJI Edge SDK into RTSP.
+class LiveviewRelay {
 public:
-    LiveviewRTSPSample();
+    LiveviewRelay();
 
-    edge_sdk::ErrorCode Init(
-        edge_sdk::Liveview::CameraType type,
-        edge_sdk::Liveview::StreamQuality quality);
-
+    edge_sdk::ErrorCode Init(edge_sdk::Liveview::CameraType camera_type,
+                             edge_sdk::Liveview::StreamQuality stream_quality);
     edge_sdk::ErrorCode Start();
 
 private:
-    edge_sdk::ErrorCode StreamCallback(
-        const uint8_t* data,
-        size_t len);
-
-    void LiveviewStatusCallback(
-        const edge_sdk::Liveview::LiveviewStatus& status);
+    edge_sdk::ErrorCode HandleH264Frame(const uint8_t* data, size_t length);
+    void HandleLiveviewStatus(const edge_sdk::Liveview::LiveviewStatus& status);
 
     std::shared_ptr<edge_sdk::Liveview> liveview_;
 
-    // Stored as int so std::atomic<> works without a custom specialisation.
-    // The detached Start() thread reads this; LiveviewStatusCallback writes
-    // it -- hence the atomic to avoid a data race.
-    std::atomic<int> liveview_status_;
+    // Written by the SDK's status callback and read by the thread Start()
+    // launches, so it must be atomic.
+    std::atomic<bool> is_liveview_available_{false};
 
-    RTSPStreamer rtsp_streamer_;
+    RtspStreamer rtsp_streamer_;
 };
 
 }  // namespace edge_app
-
-#endif  // __LIVEVIEW_RTSP_SAMPLE_H__

@@ -22,7 +22,7 @@ compile_commands.json
 *.obj
 
 # The compiled server. Anchored to the build output so it can't match source folders.
-services/edge-server/server
+services/edge-server/edge-server
 
 # ---------------------------------------------------------------- Python
 __pycache__/

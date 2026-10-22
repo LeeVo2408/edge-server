@@ -1,96 +1,77 @@
-#include "edge_app/liveview_rtsp_sample.h"
+#include "edge_app/liveview_relay.h"
 
+#include <chrono>
+#include <iostream>
 #include <thread>
-#include <unistd.h>
-#include <cstdio>
-
-using namespace edge_sdk;
 
 namespace edge_app {
+namespace {
 
-LiveviewRTSPSample::LiveviewRTSPSample()
-    : liveview_status_(0) {
-    liveview_ = edge_sdk::CreateLiveview();
-}
+// The SDK reports availability through a callback but offers no call to wait
+// on it, so the start-up thread polls.
+constexpr std::chrono::seconds kLiveviewPollInterval{1};
 
-edge_sdk::ErrorCode LiveviewRTSPSample::StreamCallback(
-    const uint8_t* data,
-    size_t len) {
+}  // namespace
 
-    rtsp_streamer_.PushFrame(data, len);
-    return kOk;
-}
+LiveviewRelay::LiveviewRelay() : liveview_(edge_sdk::CreateLiveview()) {}
 
-edge_sdk::ErrorCode LiveviewRTSPSample::Init(
-    Liveview::CameraType type,
-    Liveview::StreamQuality quality) {
-
-    auto stream_callback =
-        std::bind(
-            &LiveviewRTSPSample::StreamCallback,
-            this,
-            std::placeholders::_1,
-            std::placeholders::_2);
-
-    Liveview::Options option = {
-        type,
-        quality,
-        stream_callback
+edge_sdk::ErrorCode LiveviewRelay::Init(edge_sdk::Liveview::CameraType camera_type,
+                                        edge_sdk::Liveview::StreamQuality stream_quality) {
+    const edge_sdk::Liveview::Options options = {
+        camera_type,
+        stream_quality,
+        [this](const uint8_t* data, uint32_t length) { return HandleH264Frame(data, length); },
     };
 
-    auto rc = liveview_->Init(option);
-    if (rc != kOk) {
-        return rc;
+    const edge_sdk::ErrorCode error_code = liveview_->Init(options);
+    if (error_code != edge_sdk::kOk) {
+        return error_code;
     }
 
     liveview_->SubscribeLiveviewStatus(
-        std::bind(
-            &LiveviewRTSPSample::LiveviewStatusCallback,
-            this,
-            std::placeholders::_1));
+        [this](const edge_sdk::Liveview::LiveviewStatus& status) { HandleLiveviewStatus(status); });
 
-    // Note: RTSPStreamer::Start() (which spawns FFmpeg) is intentionally
-    // NOT called here. It is deferred to the Start() thread, just before
-    // StartH264Stream(), so FFmpeg is not left waiting on an empty pipe
-    // while the liveview link is still coming up.
-
-    return rc;
+    // FFmpeg is not started here. Start() launches it just before requesting
+    // the stream, so it is not left waiting on an empty pipe while the
+    // liveview link comes up.
+    return error_code;
 }
 
-edge_sdk::ErrorCode LiveviewRTSPSample::Start() {
-
+edge_sdk::ErrorCode LiveviewRelay::Start() {
     std::thread([this] {
-        // Wait until the ESDK signals the liveview is available.
-        // Calling StartH264Stream() before this will fail.
-        while (liveview_status_.load() == 0) {
-            sleep(1);
+        // StartH264Stream() fails if called before the SDK reports liveview
+        // as available.
+        while (!is_liveview_available_.load()) {
+            std::this_thread::sleep_for(kLiveviewPollInterval);
         }
 
-        // Start FFmpeg immediately before requesting the stream so there
-        // is a reader on the pipe when the first NAL units arrive.
+        // FFmpeg starts immediately before the stream so there is a reader on
+        // the pipe when the first NAL units arrive.
         if (!rtsp_streamer_.Start()) {
-            printf("LiveviewRTSPSample: Failed to start RTSP streamer\n");
+            std::cerr << "LiveviewRelay: failed to start RTSP streamer" << std::endl;
             return;
         }
 
-        auto rc = liveview_->StartH264Stream();
-        if (rc != kOk) {
-            printf("LiveviewRTSPSample: Failed to start H264 stream: %d\n", rc);
+        const edge_sdk::ErrorCode error_code = liveview_->StartH264Stream();
+        if (error_code != edge_sdk::kOk) {
+            std::cerr << "LiveviewRelay: failed to start H264 stream: " << error_code << std::endl;
         }
-
     }).detach();
 
-    return kOk;
+    return edge_sdk::kOk;
 }
 
-void LiveviewRTSPSample::LiveviewStatusCallback(
-    const Liveview::LiveviewStatus& status) {
+edge_sdk::ErrorCode LiveviewRelay::HandleH264Frame(const uint8_t* data, size_t length) {
+    rtsp_streamer_.PushFrame(data, length);
+    return edge_sdk::kOk;
+}
 
-    // LiveviewStatus is an enum; store as int for atomic compatibility.
-    liveview_status_.store(static_cast<int>(status));
+void LiveviewRelay::HandleLiveviewStatus(const edge_sdk::Liveview::LiveviewStatus& status) {
+    // The status is a bitmask with one bit per stream quality; any set bit
+    // means at least one quality is available.
+    is_liveview_available_.store(status != 0);
 
-    printf("LiveviewRTSPSample: liveview status changed: %d\n",
-           static_cast<int>(status));
+    std::cout << "LiveviewRelay: liveview status changed: " << status << std::endl;
 }
 
 }  // namespace edge_app
