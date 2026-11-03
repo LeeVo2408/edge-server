@@ -8,7 +8,7 @@ set(SDK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../third-party/dji-edge-sdk)
 
 set(SOURCES
     src/main.cc
-    src/liveview_rtsp_sample.cc
+    src/liveview_relay.cc
     src/rtsp_streamer.cc
 )
 
@@ -16,8 +16,14 @@ add_executable(server ${SOURCES})
 
 target_include_directories(server PRIVATE
     include
+)
+
+# SYSTEM: warnings inside DJI's headers are not ours to fix.
+target_include_directories(server SYSTEM PRIVATE
     ${SDK_DIR}/include
 )
+
+target_compile_options(server PRIVATE -Wall -Wextra -Wpedantic -Wshadow)
 
 target_link_libraries(server
     ${SDK_DIR}/lib/aarch64/libedgesdk.a
