@@ -69,10 +69,14 @@ LAN IP, which the headset cannot reach from another network, and the panel stays
 ```sh
 MTX_WEBRTCADDITIONALHOSTS=<edge Tailscale IP>
 MTX_WEBRTCLOCALTCPADDRESS=:8189
+MTX_PATHS_LIVE_SOURCE=publisher
 ```
 
 The second line lets WebRTC fall back to TCP when UDP is blocked, which is common on university
-Wi-Fi.
+Wi-Fi. The third defines the `live` path: the image ships the MediaMTX binary without its default
+`mediamtx.yml`, so no paths exist until one is defined, and publishing fails with
+`path 'live' is not configured`. The real DJI relay publishes to the same path, so this setting
+belongs in `infrastructure/.env.example` as well.
 
 ## Step 2: Webcam laptop
 
@@ -156,6 +160,8 @@ plays through the laptop speakers.
 | Panel says `Connected` but no picture | `Connected` reports the peer connection, not frames | Check the browser test page; confirm the encoder settings (baseline, `-bf 0`) |
 | Name `stev-edgeserver` does not resolve | MagicDNS off or not available on that device | Use the `100.x` IP in the script and the Swift endpoint |
 | Feed is laggy or stutters | Traffic relayed through Tailscale DERP servers | `tailscale ping stev-edgeserver` should say `direct`; try a phone hotspot instead of uni Wi-Fi |
+| `path 'live' is not configured` | MediaMTX has no paths defined | Add `MTX_PATHS_LIVE_SOURCE=publisher` to `infrastructure/.env` and recreate the container |
+| Mac/laptop `tailscale ping` times out; edge shows `offline` | Tailscale service on the VM stuck after login | On the VM: `sudo systemctl restart tailscaled`, wait a minute, ping again |
 | `publisher already exists` on push | Another source is publishing to `/live` | Stop the other ffmpeg; do not run the dock relay and the webcam together |
 
 ## Known limitations

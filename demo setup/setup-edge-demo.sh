@@ -50,7 +50,11 @@ grep -q "FPV demo: MediaMTX WebRTC" "$ENV_FILE" || \
   printf '\n# --- FPV demo: MediaMTX WebRTC over Tailscale ---\n' >> "$ENV_FILE"
 set_env MTX_WEBRTCADDITIONALHOSTS "$TS_IP"
 set_env MTX_WEBRTCLOCALTCPADDRESS ":8189"
-echo "==> Wrote MTX_WEBRTC* settings to $ENV_FILE"
+# The image ships the MediaMTX binary without its default mediamtx.yml, so no
+# paths exist until one is defined; without this, publishing to /live fails
+# with "path 'live' is not configured".
+set_env MTX_PATHS_LIVE_SOURCE "publisher"
+echo "==> Wrote MTX_* settings to $ENV_FILE"
 
 # --- 3. Restart and check -------------------------------------------------
 if docker compose version >/dev/null 2>&1; then DC="docker compose"; else DC="docker-compose"; fi
